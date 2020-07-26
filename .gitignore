@@ -1,0 +1,6 @@
+/.env
+/.idea
+/.node-version
+/fgo-game-data-JP
+/fgo-game-data-NA
+/node_modules
