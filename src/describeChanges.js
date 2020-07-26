@@ -119,56 +119,69 @@ module.exports = async function (region, path, sha, files) {
     changes.buffs = cleanupIds(changes.buffs);
     changes.funcs = cleanupIds(changes.funcs);
 
-    const outputLines = [];
-    outputLines.push(`Changes for ${region}`);
-    outputLines.push('');
+    const output = {
+        title: `Changes for ${region}`,
+        fields: []
+    };
 
     if (changes.servants.length) {
-        outputLines.push('Servants Updated')
-        outputLines.push(...changes.servants.map(id => `<https://apps.atlasacademy.io/db/#/${region}/servant/${id}>`));
-        outputLines.push('');
+        output.fields.push({
+            name: 'Servants Updated',
+            values: changes.servants.map(id => `[${id}](https://apps.atlasacademy.io/db/#/${region}/servant/${id})`)
+        });
     }
 
     if (changes.craftEssences.length) {
-        outputLines.push('Craft Essences Updated')
-        outputLines.push(...changes.craftEssences.map(id => `<https://apps.atlasacademy.io/db/#/${region}/craft-essence/${id}>`));
-        outputLines.push('');
+        output.fields.push({
+            name: 'Craft Essences Updated',
+            values: changes.craftEssences.map(id => `[${id}](https://apps.atlasacademy.io/db/#/${region}/craft-essence/${id})`)
+        });
     }
 
     if (changes.skills.length) {
-        outputLines.push('Skills Updated')
-        outputLines.push(...changes.skills.map(id => `<https://apps.atlasacademy.io/db/#/${region}/skill/${id}>`));
-        outputLines.push('');
+        output.fields.push({
+            name: 'Skills Updated',
+            values: changes.skills.map(id => `[${id}](https://apps.atlasacademy.io/db/#/${region}/skill/${id})`)
+        });
     }
 
     if (changes.noblePhantasms.length) {
-        outputLines.push('NPs Updated')
-        outputLines.push(...changes.noblePhantasms.map(id => `<https://apps.atlasacademy.io/db/#/${region}/noble-phantasm/${id}>`));
-        outputLines.push('');
+        output.fields.push({
+            name: 'NPs Updated',
+            values: changes.noblePhantasms.map(id => `[${id}](https://apps.atlasacademy.io/db/#/${region}/noble-phantasm/${id})`)
+        });
     }
 
     if (changes.buffs.length) {
-        outputLines.push('Buffs Updated')
-        outputLines.push(...changes.buffs.map(id => `<https://apps.atlasacademy.io/db/#/${region}/buff/${id}>`));
-        outputLines.push('');
+        output.fields.push({
+            name: 'Buffs Updated',
+            values: changes.buffs.map(id => `[${id}](https://apps.atlasacademy.io/db/#/${region}/buff/${id})`)
+        });
     }
 
     if (changes.funcs.length) {
-        outputLines.push('Funcs Updated')
-        outputLines.push(...changes.funcs.map(id => `<https://apps.atlasacademy.io/db/#/${region}/func/${id}>`));
-        outputLines.push('');
+        output.fields.push({
+            name: 'Funcs Updated',
+            values: changes.funcs.map(id => `[${id}](https://apps.atlasacademy.io/db/#/${region}/func/${id})`)
+        });
     }
 
+    const miscChanges = [];
     if (changes.ai)
-        outputLines.push('AI Updated');
+        miscChanges.push('AI Updated');
     if (changes.event)
-        outputLines.push('Event changes');
+        miscChanges.push('Event changes');
     if (changes.gacha)
-        outputLines.push('Gacha updated');
+        miscChanges.push('Gacha updated');
     if (changes.quest)
-        outputLines.push('Quests updated');
+        miscChanges.push('Quests updated');
     if (changes.shop)
-        outputLines.push('Shops updated');
+        miscChanges.push('Shops updated');
+    if (miscChanges.length)
+        output.fields.push({
+            name: 'Misc Changes',
+            values: miscChanges
+        });
 
-    return outputLines.join('\n');
+    return output;
 }
