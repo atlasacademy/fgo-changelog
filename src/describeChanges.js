@@ -143,19 +143,19 @@ module.exports = async function (region, path, sha, files) {
 
     if (changes.noblePhantasms.length) {
         outputLines.push('NPs Updated')
-        outputLines.push(...changes.skills.map(id => `<https://apps.atlasacademy.io/db/#/${region}/noble-phantasm/${id}>`));
+        outputLines.push(...changes.noblePhantasms.map(id => `<https://apps.atlasacademy.io/db/#/${region}/noble-phantasm/${id}>`));
         outputLines.push('');
     }
 
     if (changes.buffs.length) {
         outputLines.push('Buffs Updated')
-        outputLines.push(...changes.skills.map(id => `<https://apps.atlasacademy.io/db/#/${region}/buff/${id}>`));
+        outputLines.push(...changes.buffs.map(id => `<https://apps.atlasacademy.io/db/#/${region}/buff/${id}>`));
         outputLines.push('');
     }
 
     if (changes.funcs.length) {
         outputLines.push('Funcs Updated')
-        outputLines.push(...changes.skills.map(id => `<https://apps.atlasacademy.io/db/#/${region}/func/${id}>`));
+        outputLines.push(...changes.funcs.map(id => `<https://apps.atlasacademy.io/db/#/${region}/func/${id}>`));
         outputLines.push('');
     }
 
