@@ -24,12 +24,12 @@ module.exports = async function (region, path, sha, files) {
             quest: false,
             shop: false,
         },
-        checkForChanges = async (regex) => {
+        checkForChanges = (regex) => {
             const matches = fileList.filter(file => file.match(regex));
 
             fileList = fileList.filter(file => !file.match(regex));
 
-            return matches > 0;
+            return matches.length > 0;
         },
         extractIdsChanged = async (ids, file, callback) => {
             if (fileList.indexOf(file) === -1)
