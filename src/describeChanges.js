@@ -171,6 +171,8 @@ module.exports = async function (region, path, sha, files) {
         miscChanges.push('Assets Updated');
     if (changes.ai)
         miscChanges.push('AI Updated');
+    if (changes.dialog)
+        miscChanges.push('Dialog Updated');
     if (changes.event)
         miscChanges.push('Event changes');
     if (changes.gacha)
