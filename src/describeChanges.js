@@ -167,6 +167,8 @@ module.exports = async function (region, path, sha, files) {
     }
 
     const miscChanges = [];
+    if (changes.assets)
+        miscChanges.push('Assets Updated');
     if (changes.ai)
         miscChanges.push('AI Updated');
     if (changes.event)
@@ -177,6 +179,8 @@ module.exports = async function (region, path, sha, files) {
         miscChanges.push('Quests updated');
     if (changes.shop)
         miscChanges.push('Shops updated');
+    if (fileList.length)
+        miscChanges.push('Other changes');
     if (miscChanges.length)
         output.fields.push({
             name: 'Misc Changes',
