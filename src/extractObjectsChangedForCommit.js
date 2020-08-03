@@ -1,6 +1,6 @@
 const File = require('fs'),
-    NodeGit = require('nodegit'),
-    Path = require('path');
+    Path = require('path'),
+    {spawnSync} = require('child_process');
 
 function getObjectsByLines(path, startLine, endLine) {
     const contents = File.readFileSync(path).toString(),
@@ -33,37 +33,49 @@ function getObjectsByLines(path, startLine, endLine) {
     return objects;
 }
 
+function getModifiedRanges(path, sha, file) {
+    const regex = new RegExp(`^${sha} ([0-9]+) ([0-9]+)`),
+        blameLines = spawnSync('git', ['-C', path, 'blame', '-lp', file])
+            .output
+            .join('\n')
+            .split('\n')
+            .map(line => {
+                return line.match(regex);
+            })
+            .filter(match => match)
+            .map(match => parseInt(match[1]))
+            .sort(((a, b) => a - b)),
+        ranges = [];
+
+    if (!blameLines.length)
+        return [];
+
+    let currentLine = blameLines[0],
+        startLine = blameLines[0];
+
+    blameLines.slice(1).forEach(line => {
+        if (currentLine + 1 === line) {
+            currentLine = line;
+
+            return;
+        }
+
+        ranges.push([startLine, currentLine]);
+        currentLine = startLine = line;
+    });
+
+    ranges.push([startLine, currentLine]);
+
+    return ranges;
+}
+
 module.exports = async function (path, sha, file) {
-    const repo = await NodeGit.Repository.open(path),
-        blame = await NodeGit.Blame.file(repo, file),
-        files = [];
+    const ranges = getModifiedRanges(path, sha, file),
+        objs = [];
 
-    let startLine = null;
-    for (let i = 0; i < blame.getHunkCount(); i++) {
-        const blameHunk = blame.getHunkByIndex(i);
+    ranges.forEach(([start, end]) => {
+        objs.push(...getObjectsByLines(Path.join(path, file), start, end));
+    });
 
-        if (startLine !== null) {
-            files.push(...getObjectsByLines(
-                Path.join(path, file),
-                startLine - 2, // these line numbers include git diff headers
-                blameHunk.finalStartLineNumber() - 2 // these line numbers include git diff headers
-            ));
-
-            startLine = null;
-        }
-
-        if (blameHunk.finalCommitId().tostrS() === sha) {
-            startLine = blameHunk.finalStartLineNumber();
-        }
-    }
-
-    if (startLine !== null) {
-        files.push(...getObjectsByLines(
-            Path.join(path, file),
-            startLine - 2, // these line numbers include git diff headers
-            null
-        ));
-    }
-
-    return files;
+    return objs;
 };

@@ -2,7 +2,9 @@ const Axios = require('axios');
 
 module.exports = async function (webhook, output) {
     const fieldLimit = 1000,
-        embeds = [];
+        embedPayloadLimit = 6000,
+        embeds = [],
+        embedPayloadCount = 5;
 
     let embed = {
         title: output.title,
@@ -17,7 +19,7 @@ module.exports = async function (webhook, output) {
         };
 
         field.values.forEach(value => {
-            if (JSON.stringify(embedField).length + value.length + 2 > fieldLimit) {
+            if (JSON.stringify(embed).length + JSON.stringify(embedField).length + value.length + 2 > fieldLimit) {
                 if (embedField.value !== "") {
                     embed.fields.push(embedField);
                 }
@@ -40,12 +42,17 @@ module.exports = async function (webhook, output) {
         embed.fields.push(embedField);
     });
 
-    for (let i = 0; i < embeds.length; i += 10) {
-        await Axios.post(webhook, {
+    for (let i = 0; i < embeds.length; i += embedPayloadCount) {
+        try {
+            await Axios.post(webhook, {
             username: 'FGO Changelog',
             avatar_url: 'https://apps.atlasacademy.io/db/logo192.png',
-            embeds: embeds.slice(i, i + 10)
+            embeds: embeds.slice(i, i + embedPayloadCount)
         });
+        } catch (e) {
+            console.log(e.response);
+            throw e;
+        }
 
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
