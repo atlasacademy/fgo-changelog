@@ -1,6 +1,6 @@
 const File = require('fs'),
     Path = require('path'),
-    {spawnSync} = require('child_process');
+    ChildProcess = require('child_process');
 
 function getObjectsByLines(path, startLine, endLine) {
     const contents = File.readFileSync(path).toString(),
@@ -33,18 +33,30 @@ function getObjectsByLines(path, startLine, endLine) {
     return objects;
 }
 
-function getModifiedRanges(path, sha, file) {
+function getModifiedLines(path, sha, file) {
     const regex = new RegExp(`^${sha} ([0-9]+) ([0-9]+)`),
-        blameLines = spawnSync('git', ['-C', path, 'blame', '-lp', file])
-            .output
-            .join('\n')
-            .split('\n')
-            .map(line => {
-                return line.match(regex);
-            })
-            .filter(match => match)
-            .map(match => parseInt(match[1]))
-            .sort(((a, b) => a - b)),
+        blame = ChildProcess.spawn('git', ['-C', path, 'blame', '-lp', file]),
+        lines = [];
+
+    blame.stdout.on('data', data => {
+        const dataLines = data.toString().split('\n');
+
+        dataLines.forEach(line => {
+            if (line.match(regex)) {
+                lines.push(line.match(regex)[1]);
+            }
+        });
+    });
+
+    return new Promise(resolve => {
+        blame.on('close', (code, signal) => {
+            resolve(lines);
+        });
+    })
+}
+
+async function getModifiedRanges(path, sha, file) {
+    const blameLines = await getModifiedLines(path, sha, file),
         ranges = [];
 
     if (!blameLines.length)
@@ -70,7 +82,7 @@ function getModifiedRanges(path, sha, file) {
 }
 
 module.exports = async function (path, sha, file) {
-    const ranges = getModifiedRanges(path, sha, file),
+    const ranges = await getModifiedRanges(path, sha, file),
         objs = [];
 
     ranges.forEach(([start, end]) => {
