@@ -15,15 +15,37 @@ function getObjectsByLines(path, startLine, endLine) {
 
     let currentLine = 1;
     for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i],
-            lines = chunk.split('\n').length,
-            currentEnd = currentLine + lines;
+        let chunk = chunks[i],
+            lines = chunk.split('\n'),
+            lineCount = lines.length,
+            currentEnd = currentLine + lineCount;
 
-        if (currentEnd > startLine) {
+        if (currentEnd > startLine && currentEnd <= endLine) {
             objects.push(JSON.parse(`{${chunk}}`));
         }
 
+        // final object to check match
         if (currentEnd >= endLine) {
+            // check each line to ensure they weren't included from the insert
+            let fillerLineCount = 0;
+            for (let j = 0; j < lines.length; j++) {
+                if (currentLine + j >= endLine)
+                    break;
+
+                if (!lines[j].match(/^\s*"[A-Za-z0-9]+": (?:\[\]|\{\}),/))
+                    break;
+
+                fillerLineCount++;
+            }
+
+            // adjust end line after removing filler lines
+            endLine -= fillerLineCount;
+
+            // one final push check before exiting loop
+            if (currentLine > endLine) {
+                objects.push(JSON.parse(`{${chunk}}`));
+            }
+
             break;
         }
 
@@ -43,7 +65,7 @@ function getModifiedLines(path, sha, file) {
 
         dataLines.forEach(line => {
             if (line.match(regex)) {
-                lines.push(line.match(regex)[1]);
+                lines.push(parseInt(line.match(regex)[1]));
             }
         });
     });
